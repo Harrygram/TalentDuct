@@ -8,7 +8,7 @@
  * Run: npm run check
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, truncateSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 
@@ -186,6 +186,11 @@ try {
   }
 
   token = json.access_token;
+
+  console.log('DEBUG token type:', json.token_type);
+  console.log('DEBUG instance_url:', json.instance_url);
+  console.log('DEBUG api_instance_url:', json.api_instance_url);
+
   ok('Access token issued');
 
   const scopes = (json.scope ?? '').split(/\s+/).filter(Boolean);
@@ -214,6 +219,10 @@ head('5. Agent session');
 
 let sessionId;
 try {
+  console.log('DEBUG apiBase:', apiBase);
+  console.log('DEBUG agentId:', agentId);
+  console.log('DEBUG domain:', domain);
+
   const res = await fetch(`${apiBase}/einstein/ai-agent/v1/agents/${agentId}/sessions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -227,8 +236,12 @@ try {
 
   const text = await res.text();
 
+  console.log('DEBUG status:', res.status);
+  console.log('DEBUG headers:', Object.fromEntries(res.headers.entries()));
+
   if (!res.ok) {
     fail(`Session request failed (HTTP ${res.status})`);
+    console.log('Agent API response:', text);
 
     if (text.includes('No valid version available')) {
       hint('Your agent has no published version — it has been saved but not activated.');
